@@ -74,10 +74,34 @@ public class Application {
                 .withPhone(7032000574L)
                 .build();
 
-        save(contactB);
-        save(contactC);
+        int id = save(contactB);
 
-        fetchAllContacts().stream().forEach(System.out::println);
+
+        System.out.println("\n\nBefore update\n\n");
+
+        fetchAllContacts().forEach(System.out::println);
+
+        //Get persisted contact
+        Contact c = findContactById(id);
+
+        //Update contact
+        c.setFirstname("UPDATED");
+
+        //Persist changes
+        update(c);
+
+        //Dispaly
+        System.out.println("\n\nAfter update\n\n");
+
+        fetchAllContacts().forEach(System.out::println);
+
+        System.out.println("\n\nDeleting contact with id " + c.getId() + "\n\n");
+
+        delete(c);
+
+        fetchAllContacts().forEach(System.out::println);
+
+
         /*
         for (Contact c: fetchAllContacts()) {
             System.out.println(c);
@@ -86,7 +110,41 @@ public class Application {
         sessionFactory.close();
     }
 
-    private static void save(Contact contact) {
+    private static void delete(Contact c) {
+        Session session = sessionFactory.openSession();
+
+        session.beginTransaction();
+
+        session.delete(c);
+
+        session.getTransaction().commit();
+
+        session.close();
+
+    }
+
+    private static Contact findContactById(int id) {
+        Session session = sessionFactory.openSession();
+
+        Contact contact = session.get(Contact.class, id);
+
+        session.close();
+        return contact;
+    }
+
+    private static void update(Contact contact) {
+        Session session = sessionFactory.openSession();
+
+        session.beginTransaction();
+
+        session.update(contact);
+
+        session.getTransaction().commit();
+
+        session.close();
+    }
+
+    private static int save(Contact contact) {
         // Open a session
         Session session = sessionFactory.openSession();
 
@@ -94,13 +152,14 @@ public class Application {
         session.beginTransaction();
 
         // Use the session to save the contact
-        session.save(contact);
+        int id = (int) session.save(contact);
 
         // Commit the transaction
         session.getTransaction().commit();
 
         // Close the session
         session.close();
+        return id;
     }
 
     @SuppressWarnings("unchecked")
@@ -109,7 +168,11 @@ public class Application {
 
         // UPDATED: Create CriteriaBuilder
         CriteriaBuilder builder = session.getCriteriaBuilder();
-
+        /*
+                    DEPRECATED
+        Criteria criteria = session.createCriteria(Contact.class);
+        criteria.list();
+        */
         // UPDATED: Create CriteriaQuery
         CriteriaQuery<Contact> criteria = builder.createQuery(Contact.class);
 
